@@ -79,10 +79,18 @@ int getNetwork(address_t* addr){
     return 0;
 }
 
+address_t* whoIsBigger(address_t* first, address_t* second){
+    if (first->Netmask < second->Netmask)
+        return first;
+    else
+        return second;
+}
+
 int checkPresetNetworks(address_t* item){
     address_t presetNetwork[4];
     char verdict[1000];
     char* pos = verdict;
+    address_t* bigNet;
 
     parseInput(Network_1, &presetNetwork[0]);
     parseInput(Network_2, &presetNetwork[1]);
@@ -90,12 +98,13 @@ int checkPresetNetworks(address_t* item){
     parseInput(Network_4, &presetNetwork[3]);
 
     for (int i = 0; i < 4; i++) {
-        if ((item->IP & item->Netmask) == (presetNetwork[i].IP & presetNetwork[i].Netmask)) {
+        bigNet = whoIsBigger(item, &presetNetwork[i]);
+        if ((item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
             pos += sprintf(pos, "Address belongs to Network %d  \n",i+1);
         }
     }
-    printf("%s",verdict);
-
+    if (verdict[0] != 0) 
+        printf("%s",verdict);
 
     return 0;
 }
@@ -104,6 +113,7 @@ int checkPrivateNetworks(address_t* item){
     address_t presetNetwork[5];
     char verdict[1000] = {0};
     char* pos = verdict;
+    address_t* bigNet;
 
     parseInput(Private_1, &presetNetwork[0]);
     parseInput(Private_2, &presetNetwork[1]);
@@ -111,15 +121,14 @@ int checkPrivateNetworks(address_t* item){
     parseInput(Private_4, &presetNetwork[3]);
     parseInput(Private_5, &presetNetwork[4]);
 
-    for (int i = 0; i < 4; i++) {
-        if ((item->IP & item->Netmask) == (presetNetwork[i].IP & presetNetwork[i].Netmask)) {
+    for (int i = 0; i < 5; i++) {
+        bigNet = whoIsBigger(item, &presetNetwork[i]);
+        if ((item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
             pos += sprintf(pos, "Address belongs to Private Network %d  \n",i+1);
         }
     }
-    printf("%d\n",verdict[0]);
-    if (verdict[0] != 0) printf("wow");
-    printf("%s",verdict);
-
+    if (verdict[0] != 0) 
+        printf("%s",verdict);
 
     return 0;
 }
