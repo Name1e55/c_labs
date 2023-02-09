@@ -1,76 +1,27 @@
+#include <stdint.h>
 #include <stdio.h>
-//#include <conio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "ipfuncs.h"
-#include "ipdata.h"
+#include "ipdata.c"
 
 typedef struct Address address_t;
 
-// // Check separators count for IP part
-// int dotsCount(const char* str) {
-//     int dots = 0;
-//     while (*str != '\0') {
-//         if (*str++ == '.') dots++;
-//     }
-//     return dots;
-// }
-//
-// // Check if string is number
-// int isNumber(const char* str) {
-//     int len = strlen(str);
-//     for (int i=0; i<len; i++) {
-//         if (!isdigit(str[i])) {
-//             puts("Character in input!");
-//             return(1);
-//         }
-//     }
-//     return(0);
-// }
-//
-// // Check if IP part is a valid IP address
-// int validateIP(char* str) {
-//     int dots = 0;
-//
-//     dots = dotsCount(str);
-//     if (dots != 3) {
-//         puts("Dots count not OK");
-//         return 1;
-//     }
-//
-//     char* part;
-//     part = strtok(str, ".");
-//     while (part != NULL) {
-//         if (isNumber(part) != 0) return 1;
-//         if (strlen(part) > 0 && *part == '0') {
-//             puts("Address contains leading zeroes");
-//             return 1;
-//         }
-//         int range = atoi(part);
-//         if (range < 0 || range > 255) {
-//             puts("Octet is not in range");
-//             return 1;
-//         }
-//         part = strtok(NULL, ".");
-//     }
-//     return 0;
-//     puts("valid");
-// }
 
-// Separate IP address and netmask from input
-int parseInput(char* inpStr, address_t* parsed_item) {
+// Separate IP address and netmask from input. Write into provided buffer as twin-uint32 struct
+int parseInput(const char* inpStr, address_t* parsed_item) {
     char* addr;
     char* mask;
-    char bytes[4];
-    int ipresult;
-    // address_t item;
+    uint8_t bytes[4];
+    
+    char* inputDupe = strdup(inpStr);
 
-    addr = strtok(inpStr, "/");
+    addr = strtok(inputDupe, "/");
     if (addr != NULL) {
         mask = strtok(NULL, "/");
-        printf("Address - %s\n", addr);
-        printf("Netmask - %s\n", mask);
+        // printf("Address - %s\n", addr);
+        // printf("Netmask - %s\n", mask);
         
         char* tmp = strtok(addr, ".");
         for (int i=0 ; i<4; i++) {
@@ -78,20 +29,106 @@ int parseInput(char* inpStr, address_t* parsed_item) {
             tmp = strtok(NULL, ".");
         }
         
-        for (int j = 0; j<4; j++) {
-            printf("%d\n", bytes[j]);
-        }
+        // for (int j = 0; j<4; j++) {
+        //     printf("%d\n", bytes[j]);
+        // }
         
         parsed_item->IP = bytes[3] | (bytes[2] << 8) | (bytes[1] << 16) | (bytes [0] << 24);
         parsed_item->Netmask = ~((1 << (32 - atoi(mask))) - 1);
-        
-        printf("%lu",(unsigned long)parsed_item->Netmask);
 
+
+        // const int bytes = 4;
+        // uint8_t octet[4];
+        // char result[16];
+        // for (int i=0; i<bytes; i++){
+        //     octet[i] = parsed_item->IP >> (i*8);
+        // }
+        // sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
+        // printf("IP:    %s \n",result);
+        //
+        // for (int i=0; i<bytes; i++){
+        //     octet[i] = parsed_item->Netmask >> (i*8);
+        // }
+        // sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
+        // printf("netmask:    %s \n",result);
+        
     }
     else {
+        free(inputDupe);
         puts("Some shit happened");
         return 1;
     }
+    
+    free(inputDupe);
+    return 0;
+}
 
+int getNetwork(address_t* addr){
+    uint32_t network;
+    network = addr->IP & addr->Netmask;
+
+    const int bytes = 4;
+    uint8_t octet[4];
+    char result[16];
+    for (int i=0; i<bytes; i++){
+        octet[i] = network >> (i*8);
+    }
+    sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
+    printf("Network:    %s \n",result);
+
+    return 0;
+}
+
+int checkPresetNetworks(address_t* item){
+    address_t presetNetwork[4];
+    char verdict[1000];
+    char* pos = verdict;
+
+    parseInput(Network_1, &presetNetwork[0]);
+    parseInput(Network_2, &presetNetwork[1]);
+    parseInput(Network_3, &presetNetwork[2]);
+    parseInput(Network_4, &presetNetwork[3]);
+
+    for (int i = 0; i < 4; i++) {
+        if ((item->IP & item->Netmask) == (presetNetwork[i].IP & presetNetwork[i].Netmask)) {
+            pos += sprintf(pos, "Address belongs to Network %d  \n",i+1);
+        }
+    }
+    printf("%s",verdict);
+
+
+    return 0;
+}
+
+int checkPrivateNetworks(address_t* item){
+    address_t presetNetwork[5];
+    char verdict[1000] = {0};
+    char* pos = verdict;
+
+    parseInput(Private_1, &presetNetwork[0]);
+    parseInput(Private_2, &presetNetwork[1]);
+    parseInput(Private_3, &presetNetwork[2]);
+    parseInput(Private_4, &presetNetwork[3]);
+    parseInput(Private_5, &presetNetwork[4]);
+
+    for (int i = 0; i < 4; i++) {
+        if ((item->IP & item->Netmask) == (presetNetwork[i].IP & presetNetwork[i].Netmask)) {
+            pos += sprintf(pos, "Address belongs to Private Network %d  \n",i+1);
+        }
+    }
+    printf("%d\n",verdict[0]);
+    if (verdict[0] != 0) printf("wow");
+    printf("%s",verdict);
+
+
+    return 0;
+}
+
+int checkIfBroadcast(address_t* item){
+    uint32_t network = item->IP & item->Netmask;
+    if ((network ^ item->IP) == ~item->Netmask)
+        printf("That's a broadcast!");
+    else
+        printf("Not a broadcast address");
     return 0;
 }

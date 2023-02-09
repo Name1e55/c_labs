@@ -26,15 +26,19 @@ int main (void) {
 
     printf("Input something \n");
     m = inputIp(stdin,1);
-    printf("%s\n",m);
+    // printf("%s\n",m);
 
 
 //    int res = validateIPInput(m);
     struct Address addr;
     parseInput(m,&addr);
-    //printf(address, netmask);
+    // printf("%lu", (unsigned long) addr.IP);
+    // printf("%lu", (unsigned long) addr.Netmask);
 
-
+    getNetwork(&addr);
+    checkPresetNetworks(&addr);    
+    checkPrivateNetworks(&addr);
+    checkIfBroadcast(&addr);
 //    validate input
 //    print subnet
 //    check if private
