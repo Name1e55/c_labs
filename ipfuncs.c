@@ -4,8 +4,11 @@
 #include <string.h>
 #include <ctype.h>
 #include "ipfuncs.h"
+// Here's small cheat to not fiddle with constants in .h file.
+// Should probably transfer  some definitions
 #include "ipdata.c"
 
+// Too much structs to write, here's typedef
 typedef struct Address address_t;
 
 
@@ -15,13 +18,12 @@ int parseInput(const char* inpStr, address_t* parsed_item) {
     char* mask;
     uint8_t bytes[4];
     
+    // Copy input const to calm the compiler and provide safe runtime
     char* inputDupe = strdup(inpStr);
 
     addr = strtok(inputDupe, "/");
     if (addr != NULL) {
         mask = strtok(NULL, "/");
-        // printf("Address - %s\n", addr);
-        // printf("Netmask - %s\n", mask);
         
         char* tmp = strtok(addr, ".");
         for (int i=0 ; i<4; i++) {
@@ -29,29 +31,10 @@ int parseInput(const char* inpStr, address_t* parsed_item) {
             tmp = strtok(NULL, ".");
         }
         
-        // for (int j = 0; j<4; j++) {
-        //     printf("%d\n", bytes[j]);
-        // }
-        
+        // Put octets of our IP separately into uint32
         parsed_item->IP = bytes[3] | (bytes[2] << 8) | (bytes[1] << 16) | (bytes [0] << 24);
+        // Cool bitmask hackery. Will bork if mask is >32. Check TBA in validation
         parsed_item->Netmask = ~((1 << (32 - atoi(mask))) - 1);
-
-
-        // const int bytes = 4;
-        // uint8_t octet[4];
-        // char result[16];
-        // for (int i=0; i<bytes; i++){
-        //     octet[i] = parsed_item->IP >> (i*8);
-        // }
-        // sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
-        // printf("IP:    %s \n",result);
-        //
-        // for (int i=0; i<bytes; i++){
-        //     octet[i] = parsed_item->Netmask >> (i*8);
-        // }
-        // sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
-        // printf("netmask:    %s \n",result);
-        
     }
     else {
         free(inputDupe);
@@ -63,10 +46,13 @@ int parseInput(const char* inpStr, address_t* parsed_item) {
     return 0;
 }
 
+// Get network address from IP and netmask of provided item
 int getNetwork(address_t* addr){
     uint32_t network;
     network = addr->IP & addr->Netmask;
-
+    // Useful part ends higher, the rest is just for the output to get the right order and cast octets separately/
+    // Let's pretend we don't know inet_pton()
+    // But in reality I could not manage to make it work =((
     const int bytes = 4;
     uint8_t octet[4];
     char result[16];
@@ -79,6 +65,7 @@ int getNetwork(address_t* addr){
     return 0;
 }
 
+// Check which subnet is bigger
 address_t* whoIsBigger(address_t* first, address_t* second){
     if (first->Netmask < second->Netmask)
         return first;
@@ -86,6 +73,7 @@ address_t* whoIsBigger(address_t* first, address_t* second){
         return second;
 }
 
+// Parse preset networks the same as test item from input and then check for matches
 int checkPresetNetworks(address_t* item){
     address_t presetNetwork[4];
     char verdict[1000];
@@ -98,8 +86,10 @@ int checkPresetNetworks(address_t* item){
     parseInput(Network_4, &presetNetwork[3]);
 
     for (int i = 0; i < 4; i++) {
+        // /16 net will include /24 net so we'll need to check
+        // if our preset is bigger than the item to check
         bigNet = whoIsBigger(item, &presetNetwork[i]);
-        if ((item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
+        if ((bigNet == &presetNetwork[i]) && (item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
             pos += sprintf(pos, "Address belongs to Network %d  \n",i+1);
         }
     }
@@ -109,6 +99,7 @@ int checkPresetNetworks(address_t* item){
     return 0;
 }
 
+// Same but with private subnets
 int checkPrivateNetworks(address_t* item){
     address_t presetNetwork[5];
     char verdict[1000] = {0};
@@ -123,7 +114,7 @@ int checkPrivateNetworks(address_t* item){
 
     for (int i = 0; i < 5; i++) {
         bigNet = whoIsBigger(item, &presetNetwork[i]);
-        if ((item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
+        if ((bigNet == &presetNetwork[i]) && (item->IP & bigNet->Netmask) == (presetNetwork[i].IP & bigNet->Netmask)) {
             pos += sprintf(pos, "Address belongs to Private Network %d  \n",i+1);
         }
     }
@@ -133,6 +124,7 @@ int checkPrivateNetworks(address_t* item){
     return 0;
 }
 
+// Broadcast has 111s in the end, mask in the beginning. Invert one - it slould match for broadcast
 int checkIfBroadcast(address_t* item){
     uint32_t network = item->IP & item->Netmask;
     if ((network ^ item->IP) == ~item->Netmask)

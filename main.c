@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include "ipfuncs.h"
 
-char *inputIp(FILE* fp, size_t size) {
+// Pure copy-paste in order to get dynamic string size for input.
+// Sadly there's no additional validation yet, thus this stuff is completely useless.
+char* inputIp(FILE* fp, size_t size) {
     char* str;
     int ch;
     size_t len = 0;
@@ -26,25 +28,17 @@ int main (void) {
 
     printf("Input something \n");
     m = inputIp(stdin,1);
-    // printf("%s\n",m);
 
-
-//    int res = validateIPInput(m);
+    //I don't want to do typedef for single reference to struct =)
     struct Address addr;
     parseInput(m,&addr);
-    // printf("%lu", (unsigned long) addr.IP);
-    // printf("%lu", (unsigned long) addr.Netmask);
-
     getNetwork(&addr);
     checkPresetNetworks(&addr);    
     checkPrivateNetworks(&addr);
     checkIfBroadcast(&addr);
-//    validate input
-//    print subnet
-//    check if private
-//    check if broadcast
-//    chech if belongs to predefined nets
 
+    // Free dynamically allocated memory for our input buffer.
+    // Probably should do this after parseInput.
     free(m);
     return 0;
 }
