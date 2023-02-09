@@ -1,8 +1,10 @@
 # Prerequisites
 *.d
 
-#VSCode params
+#VSCode and clang params
 .vscode/*
+compile_commands.json
+main
 
 # Object files
 *.o
