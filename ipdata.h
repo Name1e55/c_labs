@@ -7,6 +7,8 @@
 struct Address {
     uint32_t IP;
     uint32_t Netmask;
+    // Just to be able to print input for item
+    char strVal[15];
 } ;
 
 extern char Network_1[];

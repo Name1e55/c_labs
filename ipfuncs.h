@@ -8,5 +8,6 @@ int getNetwork(struct Address* addr);
 int checkPresetNetworks(struct Address* item);
 int checkPrivateNetworks(struct Address* item);
 int checkIfBroadcast(struct Address* item);
+int doStuff(char* str);
 
 #endif

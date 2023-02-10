@@ -126,8 +126,21 @@ int checkPrivateNetworks(address_t* item){
 int checkIfBroadcast(address_t* item){
     uint32_t network = item->IP & item->Netmask;
     if ((network ^ item->IP) == ~item->Netmask)
-        printf("That's a broadcast!");
+        printf("That's a broadcast!\n");
     else
-        printf("Not a broadcast address");
+        printf("Not a broadcast address\n");
     return 0;
+}
+
+int doStuff(char* str){
+    if(str[0] != 'q'){
+        struct Address addr;
+        parseInput(str,&addr);
+        getNetwork(&addr);
+        checkPresetNetworks(&addr);    
+        checkPrivateNetworks(&addr);
+        checkIfBroadcast(&addr);
+        return 0;
+    }
+    return 1;
 }

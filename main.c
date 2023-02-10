@@ -27,16 +27,14 @@ int main (void) {
     // Input buffer
     char* m;
 
-    printf("Input something \n");
+    printf("Input IP and mask as d.d.d.d/d or q to exit \n");
     m = inputIp(stdin,1);
 
     //I don't want to do typedef for single reference to struct =)
-    struct Address addr;
-    parseInput(m,&addr);
-    getNetwork(&addr);
-    checkPresetNetworks(&addr);    
-    checkPrivateNetworks(&addr);
-    checkIfBroadcast(&addr);
+    while (doStuff(m) == 0){
+        printf("\nInput another IP and mask as d.d.d.d/d or q to exit \n");
+        m = inputIp(stdin,1);
+    }
 
     // Free dynamically allocated memory for our input buffer.
     // Probably should do this after parseInput.
