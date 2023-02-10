@@ -3,10 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "ipfuncs.h"
-// Here's small cheat to not fiddle with constants in .h file.
-// Should probably transfer  some definitions
-#include "ipdata.c"
+
+#include "ipdata.h"
 
 // Too much structs to write, here's typedef
 typedef struct Address address_t;

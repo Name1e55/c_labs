@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ipfuncs.h"
+#include "ipdata.h"
 
 // Pure copy-paste in order to get dynamic string size for input.
 // Sadly there's no additional validation yet, thus this stuff is completely useless.
