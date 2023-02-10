@@ -30,7 +30,7 @@ int main (void) {
     printf("Input IP and mask as d.d.d.d/d or q to exit \n");
     m = inputIp(stdin,1);
 
-    //I don't want to do typedef for single reference to struct =)
+    // Parse input, do some stuff. Quit on q
     while (doStuff(m) == 0){
         printf("\nInput another IP and mask as d.d.d.d/d or q to exit \n");
         m = inputIp(stdin,1);
