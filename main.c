@@ -27,12 +27,12 @@ int main (void) {
     // Input buffer
     char* m;
 
-    printf("Input IP and mask as d.d.d.d/d or q to exit \n");
+    printf("Input IP and mask in CIDR notation as d.d.d.d/d or q to exit \n");
     m = inputIp(stdin,1);
 
     // Parse input, do some stuff. Quit on q
     while (0 == doStuff(m)){
-        printf("\nInput another IP and mask as d.d.d.d/d or q to exit \n");
+        printf("\nInput another IP and mask in CIDR notation as d.d.d.d/d or q to exit \n");
         m = inputIp(stdin,1);
     }
 
