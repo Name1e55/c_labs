@@ -14,7 +14,7 @@ int isNumber(const char* str) {
     int len = strlen(str);
     for (int i=0; i<len; i++) {
         if (!isdigit(str[i])) {
-            puts("Character in input!");
+            puts("There's a character in input!");
             return(1);
         }
     }
@@ -38,7 +38,7 @@ int validateIP(const char* str) {
 
     dots = dotsCount(str);
     if (dots != 3) {
-        puts("Dots count not OK");
+        puts("Invalid octets count.");
         return 1;
     }
 
@@ -47,7 +47,7 @@ int validateIP(const char* str) {
     while (part != NULL) {
         if (isNumber(part) != 0) return 1;
         if (strlen(part) > 1 && *part == '0') {
-            puts("Address contains leading zeroes");
+            puts("Address octet contains leading zeroes");
             return 1;
         }
         int range = atoi(part);
@@ -59,7 +59,6 @@ int validateIP(const char* str) {
     }
     free(inputDupe);
     
-
     return 0;
 }
 
@@ -67,7 +66,7 @@ int validateIP(const char* str) {
 int parseInput(const char* inpStr, address_t* parsed_item) {
     char* addr;
     char* mask;
-    uint8_t bytes[4];
+    uint8_t octets[4];
     
     // Copy input const to calm the compiler and provide safe runtime
     char* inputDupe = strdup(inpStr);
@@ -96,15 +95,15 @@ int parseInput(const char* inpStr, address_t* parsed_item) {
 
         char* tmp = strtok(addr, ".");
         for (int i=0 ; i<4; i++) {
-            bytes[i] = atoi(tmp);
+            octets[i] = atoi(tmp);
             tmp = strtok(NULL, ".");
         }
         
         // Put octets of our IP separately into uint32
-        parsed_item->IP = bytes[3] | (bytes[2] << 8) | (bytes[1] << 16) | (bytes [0] << 24);
-        // Cool bitmask hackery. Will bork if mask is >32. Check TBA in validation
+        parsed_item->IP = octets[3] | (octets[2] << 8) | (octets[1] << 16) | (octets[0] << 24);
+        // Some bitmask hackery. Will bork if mask is >32. Should be safe now with mask validation
         parsed_item->Netmask = ~((1 << (32 - atoi(mask))) - 1);
-        // Here out input is kinda correct, so we fill char array for later
+        // Here out input is kinda correct, so we fill char array to output it without conversions later
         strcpy(parsed_item->strVal,inpStr);
     }
     else {
@@ -118,22 +117,20 @@ int parseInput(const char* inpStr, address_t* parsed_item) {
 }
 
 // Get network address from IP and netmask of provided item
-int getNetwork(address_t* addr){
+void getNetwork(address_t* addr){
     uint32_t network;
     network = addr->IP & addr->Netmask;
     // Useful part ends here, the rest is just for the output to get the right order and cast octets separately/
     // Let's pretend we don't know inet_pton()
     // But in reality I could not manage to make it work =((
-    const int bytes = 4;
+    const int numBytes = 4;
     uint8_t octet[4];
     char result[16];
-    for (int i=0; i<bytes; i++){
+    for (int i = 0; i < numBytes; i++){
         octet[i] = network >> (i*8);
     }
     sprintf(result, "%d.%d.%d.%d", octet[3], octet[2], octet[1], octet[0]);
     printf("Address is from Network: %s \n",result);
-
-    return 0;
 }
 
 // Check which subnet is bigger
@@ -145,7 +142,7 @@ address_t* whoIsBigger(address_t* first, address_t* second){
 }
 
 // Parse preset networks the same as test item from input and then check for matches
-int checkPresetNetworks(address_t* item){
+void checkPresetNetworks(address_t* item){
     address_t presetNetwork[4];
     char verdict[1000];
     char* pos = verdict;
@@ -166,12 +163,10 @@ int checkPresetNetworks(address_t* item){
     }
     if (verdict[0] != 0) 
         printf("%s",verdict);
-
-    return 0;
 }
 
 // Parse preset private networks the same as test item from input and then check for matches
-int checkPrivateNetworks(address_t* item){
+void checkPrivateNetworks(address_t* item){
     address_t presetNetwork[5];
     char verdict[1000] = {0};
     char* pos = verdict;
@@ -192,21 +187,20 @@ int checkPrivateNetworks(address_t* item){
     }
     if (verdict[0] != 0) 
         printf("%s",verdict);
-
-    return 0;
 }
 
 // Broadcast has 111s in the end, mask in the beginning. XOR address with it's network, invert - it slould match netmask for broadcast address
-int checkIfBroadcast(address_t* item){
+void checkIfBroadcast(address_t* item){
     uint32_t network = item->IP & item->Netmask;
     if ((network ^ item->IP) == ~item->Netmask)
         printf("That's a broadcast!\n");
     else
         printf("Not a broadcast address\n");
-    return 0;
 }
 
-int doStuff(char* str){
+// Validate provided address string and do the actual stuff with it
+int doStuff(const char* str){
+    // We quit on q
     if(str[0] != 'q'){
         struct Address addr;
         if (0 == parseInput(str,&addr)){

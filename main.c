@@ -31,13 +31,11 @@ int main (void) {
     m = inputIp(stdin,1);
 
     // Parse input, do some stuff. Quit on q
-    while (doStuff(m) == 0){
+    while (0 == doStuff(m)){
         printf("\nInput another IP and mask as d.d.d.d/d or q to exit \n");
         m = inputIp(stdin,1);
     }
 
-    // Free dynamically allocated memory for our input buffer.
-    // Probably should do this after parseInput.
     free(m);
     return 0;
 }
