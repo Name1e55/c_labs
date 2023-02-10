@@ -144,7 +144,7 @@ address_t* whoIsBigger(address_t* first, address_t* second){
 // Parse preset networks the same as test item from input and then check for matches
 void checkPresetNetworks(address_t* item){
     address_t presetNetwork[4];
-    char verdict[1000];
+    char verdict[1000] = {0};
     char* pos = verdict;
     address_t* bigNet;
 
