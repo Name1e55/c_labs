@@ -5,6 +5,7 @@
 .vscode/*
 compile_commands.json
 main
+.DS_Store
 
 # Object files
 *.o
