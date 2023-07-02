@@ -7,6 +7,7 @@
 #include<arpa/inet.h>
 #include<sys/types.h>
 #include<math.h>
+#include<unistd.h>
 
 #define PORT_NUM 1488
 
@@ -40,28 +41,46 @@ int main(int argc, char ** argv) {
 
     listen(sock, 10);
 
-    int accepted_socket;
+    int accepted_socket = 0 ;
 
     while(1){
         //bytes_read = recvfrom(sock, payload, payload_size, 0, (struct sockaddr*)&source_addr, &src_struct_len);
         //buf[bytes_read] = '\0';
         accepted_socket = accept(sock, (struct sockaddr*)&source_addr, &src_struct_len);
-        recv(accepted_socket, payload, payload_size, 0);
-        inet_ntop(AF_INET, &(source_addr.sin_addr), str_addr, INET_ADDRSTRLEN);
-        printf("Received from %s \n",str_addr);
-        //printf("%s",buf);
-        printf("\nReceived numbers ");
-        for(int i = 0; i < 10; i++) {
-            printf("%d ",payload[i]);
-        }
-        insertionSort(payload,10);
-        printf("\nSorted numbers: ");
-        for(int i = 0; i < 10; i++) {
-            printf("%d ",payload[i]);
-        }
-        //connect(sock, (struct sockaddr*)&source_addr,sizeof(source_addr));
-        send(accepted_socket, payload, payload_size, 0);
+        printf("Spawn child process\n");
 
+        pid_t child_pid;
+
+        if((child_pid = fork()) < 0) {
+            fprintf(stderr, "Error spawning child process");
+            exit(1);
+        }
+
+        if(child_pid > 0) {
+            printf("Spawned child process with PID %d \n", child_pid);
+            wait(NULL);
+        }
+        else {
+            recv(accepted_socket, payload, payload_size, 0);
+
+            inet_ntop(AF_INET, &(source_addr.sin_addr), str_addr, INET_ADDRSTRLEN);
+            printf("Received from %s \n",str_addr);
+            //printf("%s",buf);
+            printf("\nReceived numbers ");
+            for(int i = 0; i < 10; i++) {
+                printf("%d ",payload[i]);
+            }
+            printf("\n");
+            insertionSort(payload,10);
+            printf("\nSorted numbers: ");
+            for(int i = 0; i < 10; i++) {
+                printf("%d ",payload[i]);
+            }
+            printf("\n");
+            //connect(sock, (struct sockaddr*)&source_addr,sizeof(source_addr));
+            send(accepted_socket, payload, payload_size, 0);
+            exit(0);
+        }
     }
 
  
@@ -70,7 +89,7 @@ int main(int argc, char ** argv) {
 
 }
 
-
+//plain copy-paste
 void insertionSort(uint16_t arr[], int n)
 {
     int i, key, j;
