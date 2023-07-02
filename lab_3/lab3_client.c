@@ -7,44 +7,62 @@
 #include<arpa/inet.h>
 #include<sys/types.h>
 #include<time.h>
+#include<errno.h>
 
 #define PORT_NUM 1488
 
 
-
+//call - binary_name <address d.d.d.d> <port>
 int main(int argc, char ** argv) {
     //init, parse args, call main processing loop
     int sock;
+    char* p;
+    uint16_t port;
     struct sockaddr_in server_addr;
-    //const char* msg = argv[0];
-
     uint16_t payload[10];
     int payload_size = sizeof(payload);
-    
-    printf("\nGenerating numbers ");
+
+    //init connection parameters
+    inet_pton(AF_INET, argv[1], &(server_addr.sin_addr));
+    server_addr.sin_family = AF_INET;
+    port = strtol(argv[2], &p, 10);
+    server_addr.sin_port = htons(port);
+
+    char str_addr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(server_addr.sin_addr), str_addr, INET_ADDRSTRLEN);
+    printf("Connecting to %s:%d\n", str_addr, port);
+
+    printf("Generating numbers ");
     srand(time(NULL));
     for(int i = 0; i < 10; i++) {
         payload[i] = rand() % 100;
         printf("%d ",payload[i]);
     }
+    printf("\n");
 
+    
+    //create socket
     sock = socket(AF_INET, SOCK_STREAM, 0);
     if (sock < 0) {
         fprintf(stderr, "Error creating socket.");
         exit(1);
     }
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    server_addr.sin_port = htons(PORT_NUM);
     
-    connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    //open connection/send array/receive array
+    int result;
+    result = connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr));
+    if(result < 0) {
+        printf("Error %s\n",strerror(errno));
+    }
     send(sock, payload, payload_size, 0);
+    printf("Sent the numbers\n");
     recv(sock, payload, payload_size, 0);
-
-    printf("\nReceived sorted numbers ");
+    printf("Received something\n");
+    printf("Received sorted numbers ");
     for(int i = 0; i < 10; i++) {
         printf("%d ",payload[i]);
     }
+    printf("\n");
     
 
     return(0);
